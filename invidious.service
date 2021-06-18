@@ -1,5 +1,5 @@
 [Unit]
-Description=Invidious (An alternative YouTube front-end)
+Description=Testidious (An alternative YouTube front-end)
 After=syslog.target
 After=network.target
 

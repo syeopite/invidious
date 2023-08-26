@@ -44,11 +44,15 @@ function handle_previous_page_button() {
 
 addEventListener('DOMContentLoaded', function() {
     const pagination_locale_strings = JSON.parse(document.getElementById('pagination_locale_strings').textContent);
-
     const next_page_containers = document.getElementsByClassName("page-next-container");
 
     for (let container of next_page_containers) {
-        container.getElementsByClassName("pure-button")[0].addEventListener("click", save_current_continuation);
+        const next_page_button = container.getElementsByClassName("pure-button")
+
+        // exists?
+        if (next_page_button.length > 0) {
+            next_page_button[0].addEventListener("click", save_current_continuation);
+        };
     };
 
     // Only add previous page buttons when not on the first page

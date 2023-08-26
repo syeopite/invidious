@@ -57,9 +57,9 @@ addEventListener('DOMContentLoaded', function() {
 
         for (let container of prev_page_containers) {
             if (pagination_locale_strings.is_locale_rtl) {
-                container.innerHTML = `<a href="#" class="pure-button pure-button-secondary">${pagination_locale_strings.prev_page_locale_string}</a>&nbsp;&nbsp;<i class="icon ion-ios-arrow-forward"></i>`
+                container.innerHTML = `<button class="pure-button pure-button-secondary">${pagination_locale_strings.prev_page_locale_string}&nbsp;&nbsp;<i class="icon ion-ios-arrow-forward"></i></button>`
             } else {
-                container.innerHTML = `<a href="#" class="pure-button pure-button-secondary"><i class="icon ion-ios-arrow-back"></i>&nbsp;&nbsp;${pagination_locale_strings.prev_page_locale_string}</a>`
+                container.innerHTML = `<button class="pure-button pure-button-secondary"><i class="icon ion-ios-arrow-back"></i>&nbsp;&nbsp;${pagination_locale_strings.prev_page_locale_string}</button>`
             };
             container.getElementsByClassName("pure-button")[0].addEventListener("click", handle_previous_page_button);
         };

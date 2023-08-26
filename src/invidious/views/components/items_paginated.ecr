@@ -1,5 +1,15 @@
 <%= page_nav_html %>
 
+<script id="pagination_locale_strings" type="application/json">
+<%=
+{
+    "next_page_locale_string" => translate(locale, "Next page"),
+    "prev_page_locale_string" => translate(locale, "Previous page"),
+    "is_locale_rtl"           => locale_is_rtl?(locale),
+}.to_pretty_json
+%>
+</script>
+
 <div class="pure-g">
     <%- items.each do |item| -%>
         <%= rendered "components/item" %>

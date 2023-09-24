@@ -1,0 +1,31 @@
+<% content_for "header" do %>
+<title><%= "Geoblocked" %> - Invidious</title>
+<link rel="stylesheet" href="/css/geoblocked.css?v=<%= ASSET_COMMIT %>">
+<% end %>
+
+<div class="h-box">
+    <div class="geoblocked-exception-container">
+        <% if !locale_is_rtl?(locale) %>
+            <i class="geoblocked-exception-logo icon ion-md-globe"></i>
+        <% end %>
+
+        <div class="geoblocked-exception-textual-content">
+            <h1 id="geoblocked-exception-header"><%=translate(locale, "error_page_geoblocked_header")%></h1>
+            <p id="geoblocked-exception-explanation"><%=translate(locale, "error_page_geoblocked_explanation")%></p>
+
+            <% if preferences.automatic_instance_redirect%>
+                <a title="<%=translate(locale, "error_page_geoblocked_switch_instance_link")%>" href="/redirect?referer=<%=env.get?("current_page")%>">
+                    <%=translate(locale, "error_page_geoblocked_switch_instance_link")%>
+                </a>
+            <% else %>
+                <a title="<%=translate(locale, "error_page_geoblocked_switch_instance_link")%>" href="https://redirect.invidious.io<%=env.request.resource%>">
+                    <%=translate(locale, "error_page_geoblocked_switch_instance_link")%>
+                </a>
+            <% end %>
+        </div>
+
+        <% if locale_is_rtl?(locale) %>
+            <i class="geoblocked-exception-logo icon ion-md-globe"></i>
+        <% end %>
+    </div>
+</div>

@@ -133,6 +133,9 @@ module Invidious::Routes::Embed
       video = get_video(id, region: params.region)
     rescue ex : NotFoundException
       return error_template(404, ex)
+    rescue ex : VideoGeoblocked
+      LOGGER.error("get_video: #{id} : unable to fetch geoblocked video!")
+      return templated "errors/geoblocked"
     rescue ex
       return error_template(500, ex)
     end

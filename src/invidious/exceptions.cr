@@ -31,6 +31,11 @@ end
 class NotFoundException < InfoException
 end
 
+# Exception used to indicate that a video is geoblocked and cannot be accessed by
+# the current instance
+class VideoGeoblocked < Exception
+end
+
 class VideoNotAvailableException < Exception
 end
 

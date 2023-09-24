@@ -64,6 +64,9 @@ module Invidious::Routes::Watch
     rescue ex : NotFoundException
       LOGGER.error("get_video not found: #{id} : #{ex.message}")
       return error_template(404, ex)
+    rescue ex : VideoGeoblocked
+      LOGGER.error("get_video: #{id} : unable to fetch geoblocked video!")
+      return templated "errors/geoblocked"
     rescue ex
       LOGGER.error("get_video: #{id} : #{ex.message}")
       return error_template(500, ex)

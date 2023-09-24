@@ -382,6 +382,8 @@ def fetch_video(id, region)
 
   # Check for region-blocks
   if info["reason"]?.try &.as_s.includes?("your country")
+    raise VideoGeoblocked.new
+
     bypass_regions = PROXY_LIST.keys & allowed_regions
     if !bypass_regions.empty?
       region = bypass_regions[rand(bypass_regions.size)]

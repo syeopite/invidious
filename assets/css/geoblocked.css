@@ -1,0 +1,28 @@
+.geoblocked-exception-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.geoblocked-exception-logo {
+    font-size: 20em;
+}
+
+
+.geoblocked-exception-textual-content {
+    margin-left: 3em;
+}
+
+#geoblocked-exception-header {
+    font-size: 2em;
+}
+
+#geoblocked-exception-explanation {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+#geoblocked-exception-switch-instance-link {
+    font-size: 1em;
+}

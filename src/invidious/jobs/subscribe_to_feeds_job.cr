@@ -1,3 +1,5 @@
+{% skip_file if flag?(:no_postgresql)%}
+
 class Invidious::Jobs::SubscribeToFeedsJob < Invidious::Jobs::BaseJob
   private getter db : DB::Database
   private getter hmac_key : String

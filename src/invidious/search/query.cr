@@ -119,9 +119,11 @@ module Invidious::Search
         items = Processors.channel(self)
         #
       when .subscriptions?
-        if user
-          items = Processors.subscriptions(self, user.as(Invidious::User))
-        end
+        {% unless flag?(:no_postgresql) %}
+          if user
+            items = Processors.subscriptions(self, user.as(Invidious::User))
+          end
+        {% end %}
       end
 
       return items

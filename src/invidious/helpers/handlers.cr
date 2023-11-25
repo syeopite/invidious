@@ -85,54 +85,60 @@ class FilteredCompressHandler < Kemal::Handler
   end
 end
 
-class AuthHandler < Kemal::Handler
-  {% for method in %w(GET POST PUT HEAD DELETE PATCH OPTIONS) %}
-    only ["/api/v1/auth/*"], {{method}}
-  {% end %}
+# Probably an upstream bug. The compiler is not supposed to include code
+# that isn't called anywhere, which is the case when the compile time flag
+# no_postgresql is set. However, the compiler does include it and as such we need to
+# manually exclude it with a macro flag conditional
+{% unless flag?(:no_postgresql) %}
+  class AuthHandler < Kemal::Handler
+    {% for method in %w(GET POST PUT HEAD DELETE PATCH OPTIONS) %}
+      only ["/api/v1/auth/*"], {{method}}
+    {% end %}
 
-  def call(env)
-    return call_next env unless only_match? env
+    def call(env)
+      return call_next env unless only_match? env
 
-    begin
-      if token = env.request.headers["Authorization"]?
-        token = JSON.parse(URI.decode_www_form(token.lchop("Bearer ")))
-        session = URI.decode_www_form(token["session"].as_s)
-        scopes, expire, signature = validate_request(token, session, env.request, HMAC_KEY, nil)
+      begin
+        if token = env.request.headers["Authorization"]?
+          token = JSON.parse(URI.decode_www_form(token.lchop("Bearer ")))
+          session = URI.decode_www_form(token["session"].as_s)
+          scopes, expire, signature = validate_request(token, session, env.request, HMAC_KEY, nil)
 
-        if email = Invidious::Database::SessionIDs.select_email(session)
-          user = Invidious::Database::Users.select!(email: email)
+          if email = Invidious::Database::SessionIDs.select_email(session)
+            user = Invidious::Database::Users.select!(email: email)
+          end
+        elsif sid = env.request.cookies["SID"]?.try &.value
+          if sid.starts_with? "v1:"
+            raise "Cannot use token as SID"
+          end
+
+          if email = Invidious::Database::SessionIDs.select_email(sid)
+            user = Invidious::Database::Users.select!(email: email)
+          end
+
+          scopes = [":*"]
+          session = sid
         end
-      elsif sid = env.request.cookies["SID"]?.try &.value
-        if sid.starts_with? "v1:"
-          raise "Cannot use token as SID"
+
+        if !user
+          raise "Request must be authenticated"
         end
 
-        if email = Invidious::Database::SessionIDs.select_email(sid)
-          user = Invidious::Database::Users.select!(email: email)
-        end
+        env.set "scopes", scopes
+        env.set "user", user
+        env.set "session", session
 
-        scopes = [":*"]
-        session = sid
+        call_next env
+      rescue ex
+        env.response.content_type = "application/json"
+
+        error_message = {"error" => ex.message}.to_json
+        env.response.status_code = 403
+        env.response.print error_message
       end
-
-      if !user
-        raise "Request must be authenticated"
-      end
-
-      env.set "scopes", scopes
-      env.set "user", user
-      env.set "session", session
-
-      call_next env
-    rescue ex
-      env.response.content_type = "application/json"
-
-      error_message = {"error" => ex.message}.to_json
-      env.response.status_code = 403
-      env.response.print error_message
     end
   end
-end
+{% end %}
 
 class APIHandler < Kemal::Handler
   {% for method in %w(GET POST PUT HEAD DELETE PATCH OPTIONS) %}

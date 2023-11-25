@@ -177,50 +177,54 @@ module Invidious::Routes::PreferencesRoute
       save_player_pos:             save_player_pos,
     }.to_json)
 
-    if user = env.get? "user"
-      user = user.as(User)
-      user.preferences = preferences
-      Invidious::Database::Users.update_preferences(user)
+    {% unless flag?(:no_postgresql) %}
+      if user = env.get? "user"
+        user = user.as(User)
+        user.preferences = preferences
+        Invidious::Database::Users.update_preferences(user)
 
-      if CONFIG.admins.includes? user.email
-        CONFIG.default_user_preferences.default_home = env.params.body["admin_default_home"]?.try &.as(String) || CONFIG.default_user_preferences.default_home
+        if CONFIG.admins.includes? user.email
+          CONFIG.default_user_preferences.default_home = env.params.body["admin_default_home"]?.try &.as(String) || CONFIG.default_user_preferences.default_home
 
-        admin_feed_menu = [] of String
-        4.times do |index|
-          option = env.params.body["admin_feed_menu[#{index}]"]?.try &.as(String) || ""
-          if !option.empty?
-            admin_feed_menu << option
+          admin_feed_menu = [] of String
+          4.times do |index|
+            option = env.params.body["admin_feed_menu[#{index}]"]?.try &.as(String) || ""
+            if !option.empty?
+              admin_feed_menu << option
+            end
           end
+          CONFIG.default_user_preferences.feed_menu = admin_feed_menu
+
+          popular_enabled = env.params.body["popular_enabled"]?.try &.as(String)
+          popular_enabled ||= "off"
+          CONFIG.popular_enabled = popular_enabled == "on"
+
+          captcha_enabled = env.params.body["captcha_enabled"]?.try &.as(String)
+          captcha_enabled ||= "off"
+          CONFIG.captcha_enabled = captcha_enabled == "on"
+
+          login_enabled = env.params.body["login_enabled"]?.try &.as(String)
+          login_enabled ||= "off"
+          CONFIG.login_enabled = login_enabled == "on"
+
+          registration_enabled = env.params.body["registration_enabled"]?.try &.as(String)
+          registration_enabled ||= "off"
+          CONFIG.registration_enabled = registration_enabled == "on"
+
+          statistics_enabled = env.params.body["statistics_enabled"]?.try &.as(String)
+          statistics_enabled ||= "off"
+          CONFIG.statistics_enabled = statistics_enabled == "on"
+
+          CONFIG.modified_source_code_url = env.params.body["modified_source_code_url"]?.try &.as(String)
+
+          File.write("config/config.yml", CONFIG.to_yaml)
         end
-        CONFIG.default_user_preferences.feed_menu = admin_feed_menu
-
-        popular_enabled = env.params.body["popular_enabled"]?.try &.as(String)
-        popular_enabled ||= "off"
-        CONFIG.popular_enabled = popular_enabled == "on"
-
-        captcha_enabled = env.params.body["captcha_enabled"]?.try &.as(String)
-        captcha_enabled ||= "off"
-        CONFIG.captcha_enabled = captcha_enabled == "on"
-
-        login_enabled = env.params.body["login_enabled"]?.try &.as(String)
-        login_enabled ||= "off"
-        CONFIG.login_enabled = login_enabled == "on"
-
-        registration_enabled = env.params.body["registration_enabled"]?.try &.as(String)
-        registration_enabled ||= "off"
-        CONFIG.registration_enabled = registration_enabled == "on"
-
-        statistics_enabled = env.params.body["statistics_enabled"]?.try &.as(String)
-        statistics_enabled ||= "off"
-        CONFIG.statistics_enabled = statistics_enabled == "on"
-
-        CONFIG.modified_source_code_url = env.params.body["modified_source_code_url"]?.try &.as(String)
-
-        File.write("config/config.yml", CONFIG.to_yaml)
+      else
+        env.response.cookies["PREFS"] = Invidious::User::Cookies.prefs(CONFIG.domain, preferences)
       end
-    else
+    {% else %}
       env.response.cookies["PREFS"] = Invidious::User::Cookies.prefs(CONFIG.domain, preferences)
-    end
+    {% end %}
 
     env.redirect referer
   end
@@ -234,16 +238,18 @@ module Invidious::Routes::PreferencesRoute
     redirect = redirect == "true"
 
     if user = env.get? "user"
-      user = user.as(User)
+      {% unless flag?(:no_postgresql) %}
+        user = user.as(User)
 
-      case user.preferences.dark_mode
-      when "dark"
-        user.preferences.dark_mode = "light"
-      else
-        user.preferences.dark_mode = "dark"
-      end
+        case user.preferences.dark_mode
+        when "dark"
+          user.preferences.dark_mode = "light"
+        else
+          user.preferences.dark_mode = "dark"
+        end
 
-      Invidious::Database::Users.update_preferences(user)
+        Invidious::Database::Users.update_preferences(user)
+      {% end %}
     else
       preferences = env.get("preferences").as(Preferences)
 

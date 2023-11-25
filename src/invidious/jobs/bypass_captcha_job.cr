@@ -1,3 +1,5 @@
+{% skip_file if flag?(:no_postgresql)%}
+
 class Invidious::Jobs::BypassCaptchaJob < Invidious::Jobs::BaseJob
   def begin
     loop do

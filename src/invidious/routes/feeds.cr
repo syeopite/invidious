@@ -284,31 +284,33 @@ module Invidious::Routes::Feeds
     params = HTTP::Params.parse(env.params.query["params"]? || "")
     path = env.request.path
 
-    if plid.starts_with? "IV"
-      if playlist = Invidious::Database::Playlists.select(id: plid)
-        videos = get_playlist_videos(playlist, offset: 0)
+    {% unless flag?(:no_postgresql) %}
+      if plid.starts_with? "IV"
+        if playlist = Invidious::Database::Playlists.select(id: plid)
+          videos = get_playlist_videos(playlist, offset: 0)
 
-        return XML.build(indent: "  ", encoding: "UTF-8") do |xml|
-          xml.element("feed", "xmlns:yt": "http://www.youtube.com/xml/schemas/2015",
-            "xmlns:media": "http://search.yahoo.com/mrss/", xmlns: "http://www.w3.org/2005/Atom",
-            "xml:lang": "en-US") do
-            xml.element("link", rel: "self", href: "#{HOST_URL}#{env.request.resource}")
-            xml.element("id") { xml.text "iv:playlist:#{plid}" }
-            xml.element("iv:playlistId") { xml.text plid }
-            xml.element("title") { xml.text playlist.title }
-            xml.element("link", rel: "alternate", href: "#{HOST_URL}/playlist?list=#{plid}")
+          return XML.build(indent: "  ", encoding: "UTF-8") do |xml|
+            xml.element("feed", "xmlns:yt": "http://www.youtube.com/xml/schemas/2015",
+              "xmlns:media": "http://search.yahoo.com/mrss/", xmlns: "http://www.w3.org/2005/Atom",
+              "xml:lang": "en-US") do
+              xml.element("link", rel: "self", href: "#{HOST_URL}#{env.request.resource}")
+              xml.element("id") { xml.text "iv:playlist:#{plid}" }
+              xml.element("iv:playlistId") { xml.text plid }
+              xml.element("title") { xml.text playlist.title }
+              xml.element("link", rel: "alternate", href: "#{HOST_URL}/playlist?list=#{plid}")
 
-            xml.element("author") do
-              xml.element("name") { xml.text playlist.author }
+              xml.element("author") do
+                xml.element("name") { xml.text playlist.author }
+              end
+
+              videos.each &.to_xml(xml)
             end
-
-            videos.each &.to_xml(xml)
           end
+        else
+          haltf env, status_code: 404
         end
-      else
-        haltf env, status_code: 404
       end
-    end
+    {% end %}
 
     response = YT_POOL.client &.get("/feeds/videos.xml?playlist_id=#{plid}")
     document = XML.parse(response.body)

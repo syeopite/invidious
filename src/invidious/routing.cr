@@ -24,22 +24,27 @@ module Invidious::Routing
 
       self.register_channel_routes
       self.register_watch_routes
-
-      self.register_iv_playlist_routes
       self.register_yt_playlist_routes
 
       self.register_search_routes
-
-      self.register_user_routes
       self.register_feed_routes
 
-      # Support push notifications via PubSubHubbub
-      get "/feed/webhook/:token", Routes::Feeds, :push_notifications_get
-      post "/feed/webhook/:token", Routes::Feeds, :push_notifications_post
+      self.register_user_routes
 
-      if CONFIG.enable_user_notifications
-        get "/modify_notifications", Routes::Notifications, :modify
-      end
+      {% unless flag?(:no_postgresql) %}
+        self.register_user_feed_routes
+
+        self.register_iv_playlist_routes
+
+        # Support push notifications via PubSubHubbub
+        get "/feed/webhook/:token", Routes::Feeds, :push_notifications_get
+        post "/feed/webhook/:token", Routes::Feeds, :push_notifications_post
+
+        if CONFIG.enable_user_notifications
+          get "/modify_notifications", Routes::Notifications, :modify
+        end
+      {% end %}
+
     {% end %}
 
     self.register_image_routes
@@ -53,31 +58,37 @@ module Invidious::Routing
   # -------------------
 
   def register_user_routes
-    # User login/out
-    get "/login", Routes::Login, :login_page
-    post "/login", Routes::Login, :login
-    post "/signout", Routes::Login, :signout
+    {% unless flag?(:no_postgresql )%}
+      # User login/out
+      get "/login", Routes::Login, :login_page
+      post "/login", Routes::Login, :login
+      post "/signout", Routes::Login, :signout
 
-    # User preferences
-    get "/preferences", Routes::PreferencesRoute, :show
-    post "/preferences", Routes::PreferencesRoute, :update
-    get "/toggle_theme", Routes::PreferencesRoute, :toggle_theme
-    get "/data_control", Routes::PreferencesRoute, :data_control
-    post "/data_control", Routes::PreferencesRoute, :update_data_control
+      # User preferences
+      get "/preferences", Routes::PreferencesRoute, :show
+      post "/preferences", Routes::PreferencesRoute, :update
+      get "/toggle_theme", Routes::PreferencesRoute, :toggle_theme
+      get "/data_control", Routes::PreferencesRoute, :data_control
+      post "/data_control", Routes::PreferencesRoute, :update_data_control
 
-    # User account management
-    get "/change_password", Routes::Account, :get_change_password
-    post "/change_password", Routes::Account, :post_change_password
-    get "/delete_account", Routes::Account, :get_delete
-    post "/delete_account", Routes::Account, :post_delete
-    get "/clear_watch_history", Routes::Account, :get_clear_history
-    post "/clear_watch_history", Routes::Account, :post_clear_history
-    get "/authorize_token", Routes::Account, :get_authorize_token
-    post "/authorize_token", Routes::Account, :post_authorize_token
-    get "/token_manager", Routes::Account, :token_manager
-    post "/token_ajax", Routes::Account, :token_ajax
-    post "/subscription_ajax", Routes::Subscriptions, :toggle_subscription
-    get "/subscription_manager", Routes::Subscriptions, :subscription_manager
+      # User account management
+      get "/change_password", Routes::Account, :get_change_password
+      post "/change_password", Routes::Account, :post_change_password
+      get "/delete_account", Routes::Account, :get_delete
+      post "/delete_account", Routes::Account, :post_delete
+      get "/clear_watch_history", Routes::Account, :get_clear_history
+      post "/clear_watch_history", Routes::Account, :post_clear_history
+      get "/authorize_token", Routes::Account, :get_authorize_token
+      post "/authorize_token", Routes::Account, :post_authorize_token
+      get "/token_manager", Routes::Account, :token_manager
+      post "/token_ajax", Routes::Account, :token_ajax
+      post "/subscription_ajax", Routes::Subscriptions, :toggle_subscription
+      get "/subscription_manager", Routes::Subscriptions, :subscription_manager
+    {% else %}
+      get "/preferences", Routes::PreferencesRoute, :show
+      post "/preferences", Routes::PreferencesRoute, :update
+      get "/toggle_theme", Routes::PreferencesRoute, :toggle_theme
+    {% end %}
   end
 
   def register_iv_playlist_routes
@@ -94,19 +105,26 @@ module Invidious::Routing
 
   def register_feed_routes
     # Feeds
-    get "/view_all_playlists", Routes::Feeds, :view_all_playlists_redirect
-    get "/feed/playlists", Routes::Feeds, :playlists
     get "/feed/popular", Routes::Feeds, :popular
     get "/feed/trending", Routes::Feeds, :trending
+
+    # RSS Feeds
+    get "/feed/channel/:ucid", Routes::Feeds, :rss_channel
+    get "/feed/playlist/:plid", Routes::Feeds, :rss_playlist
+    get "/feeds/videos.xml", Routes::Feeds, :rss_videos
+  end
+
+  def register_user_feed_routes
+    # Feeds
+    get "/view_all_playlists", Routes::Feeds, :view_all_playlists_redirect
+    get "/feed/playlists", Routes::Feeds, :playlists
     get "/feed/subscriptions", Routes::Feeds, :subscriptions
     get "/feed/history", Routes::Feeds, :history
 
     # RSS Feeds
-    get "/feed/channel/:ucid", Routes::Feeds, :rss_channel
     get "/feed/private", Routes::Feeds, :rss_private
-    get "/feed/playlist/:plid", Routes::Feeds, :rss_playlist
-    get "/feeds/videos.xml", Routes::Feeds, :rss_videos
   end
+
 
   # -------------------
   #  Youtube routes
@@ -157,7 +175,9 @@ module Invidious::Routing
 
   def register_watch_routes
     get "/watch", Routes::Watch, :handle
-    post "/watch_ajax", Routes::Watch, :mark_watched
+    {% unless flag?(:no_postgresql) %}
+      post "/watch_ajax", Routes::Watch, :mark_watched
+    {% end %}
     get "/watch/:id", Routes::Watch, :redirect
     get "/live/:id", Routes::Watch, :redirect
     get "/shorts/:id", Routes::Watch, :redirect
@@ -275,38 +295,42 @@ module Invidious::Routing
       # Invidious::Routing.get "/api/v1/auth/notifications", {{namespace}}::Authenticated, :notifications
       # Invidious::Routing.post "/api/v1/auth/notifications", {{namespace}}::Authenticated, :notifications
 
-      get "/api/v1/auth/preferences", {{namespace}}::Authenticated, :get_preferences
-      post "/api/v1/auth/preferences", {{namespace}}::Authenticated, :set_preferences
+      {% unless flag?(:no_postgresql) %}
 
-      get "/api/v1/auth/export/invidious", {{namespace}}::Authenticated, :export_invidious
-      post "/api/v1/auth/import/invidious", {{namespace}}::Authenticated, :import_invidious
+        get "/api/v1/auth/preferences", {{namespace}}::Authenticated, :get_preferences
+        post "/api/v1/auth/preferences", {{namespace}}::Authenticated, :set_preferences
 
-      get "/api/v1/auth/history", {{namespace}}::Authenticated, :get_history
-      post "/api/v1/auth/history/:id", {{namespace}}::Authenticated, :mark_watched
-      delete "/api/v1/auth/history/:id", {{namespace}}::Authenticated, :mark_unwatched
-      delete "/api/v1/auth/history", {{namespace}}::Authenticated, :clear_history
+        get "/api/v1/auth/export/invidious", {{namespace}}::Authenticated, :export_invidious
+        post "/api/v1/auth/import/invidious", {{namespace}}::Authenticated, :import_invidious
 
-      get "/api/v1/auth/feed", {{namespace}}::Authenticated, :feed
+        get "/api/v1/auth/history", {{namespace}}::Authenticated, :get_history
+        post "/api/v1/auth/history/:id", {{namespace}}::Authenticated, :mark_watched
+        delete "/api/v1/auth/history/:id", {{namespace}}::Authenticated, :mark_unwatched
+        delete "/api/v1/auth/history", {{namespace}}::Authenticated, :clear_history
 
-      get "/api/v1/auth/subscriptions", {{namespace}}::Authenticated, :get_subscriptions
-      post "/api/v1/auth/subscriptions/:ucid", {{namespace}}::Authenticated, :subscribe_channel
-      delete "/api/v1/auth/subscriptions/:ucid", {{namespace}}::Authenticated, :unsubscribe_channel
+        get "/api/v1/auth/feed", {{namespace}}::Authenticated, :feed
 
-      get "/api/v1/auth/playlists", {{namespace}}::Authenticated, :list_playlists
-      post "/api/v1/auth/playlists", {{namespace}}::Authenticated, :create_playlist
-      patch "/api/v1/auth/playlists/:plid",{{namespace}}:: Authenticated, :update_playlist_attribute
-      delete "/api/v1/auth/playlists/:plid", {{namespace}}::Authenticated, :delete_playlist
-      post "/api/v1/auth/playlists/:plid/videos", {{namespace}}::Authenticated, :insert_video_into_playlist
-      delete "/api/v1/auth/playlists/:plid/videos/:index", {{namespace}}::Authenticated, :delete_video_in_playlist
+        get "/api/v1/auth/subscriptions", {{namespace}}::Authenticated, :get_subscriptions
+        post "/api/v1/auth/subscriptions/:ucid", {{namespace}}::Authenticated, :subscribe_channel
+        delete "/api/v1/auth/subscriptions/:ucid", {{namespace}}::Authenticated, :unsubscribe_channel
 
-      get "/api/v1/auth/tokens", {{namespace}}::Authenticated, :get_tokens
-      post "/api/v1/auth/tokens/register", {{namespace}}::Authenticated, :register_token
-      post "/api/v1/auth/tokens/unregister", {{namespace}}::Authenticated, :unregister_token
+        get "/api/v1/auth/playlists", {{namespace}}::Authenticated, :list_playlists
+        post "/api/v1/auth/playlists", {{namespace}}::Authenticated, :create_playlist
+        patch "/api/v1/auth/playlists/:plid",{{namespace}}:: Authenticated, :update_playlist_attribute
+        delete "/api/v1/auth/playlists/:plid", {{namespace}}::Authenticated, :delete_playlist
+        post "/api/v1/auth/playlists/:plid/videos", {{namespace}}::Authenticated, :insert_video_into_playlist
+        delete "/api/v1/auth/playlists/:plid/videos/:index", {{namespace}}::Authenticated, :delete_video_in_playlist
 
-      if CONFIG.enable_user_notifications
-        get "/api/v1/auth/notifications", {{namespace}}::Authenticated, :notifications
-        post "/api/v1/auth/notifications", {{namespace}}::Authenticated, :notifications
-      end
+        get "/api/v1/auth/tokens", {{namespace}}::Authenticated, :get_tokens
+        post "/api/v1/auth/tokens/register", {{namespace}}::Authenticated, :register_token
+        post "/api/v1/auth/tokens/unregister", {{namespace}}::Authenticated, :unregister_token
+
+        if CONFIG.enable_user_notifications
+          get "/api/v1/auth/notifications", {{namespace}}::Authenticated, :notifications
+          post "/api/v1/auth/notifications", {{namespace}}::Authenticated, :notifications
+        end
+
+      {% end %}
 
       # Misc
       get "/api/v1/stats", {{namespace}}::Misc, :stats

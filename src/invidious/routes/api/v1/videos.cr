@@ -242,9 +242,19 @@ module Invidious::Routes::API::V1::Videos
 
     case source
     when "archive"
-      if CONFIG.cache_annotations && (cached_annotation = Invidious::Database::Annotations.select(id))
-        annotations = cached_annotation.annotations
-      else
+
+      {% if flag?(:no_postgresql) %}
+        annotations = nil
+      {% else %}
+        if CONFIG.cache_annotations
+          annotations = Invidious::Database::Annotations.select(id)
+          annotations = annotations.annotations if annotations
+        else
+          annotations = nil
+        end
+      {% end %}
+
+      if !annotations
         index = CHARS_SAFE.index(id[0]).not_nil!.to_s.rjust(2, '0')
 
         # IA doesn't handle leading hyphens,
@@ -274,7 +284,9 @@ module Invidious::Routes::API::V1::Videos
 
         annotations = response.body
 
-        cache_annotation(id, annotations)
+        {% unless flag?(:no_postgresql) %}
+          cache_annotation(id, annotations)
+        {% end %}
       end
     else # "youtube"
       response = YT_POOL.client &.get("/annotations_invideo?video_id=#{id}")

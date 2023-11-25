@@ -315,15 +315,19 @@ def produce_playlist_continuation(id, index)
 end
 
 def get_playlist(plid : String)
-  if plid.starts_with? "IV"
-    if playlist = Invidious::Database::Playlists.select(id: plid)
-      return playlist
-    else
-      raise NotFoundException.new("Playlist does not exist.")
-    end
-  else
+  {% if flag?(:no_postgresql) %}
     return fetch_playlist(plid)
-  end
+  {% else %}
+    if plid.starts_with? "IV"
+      if playlist = Invidious::Database::Playlists.select(id: plid)
+        return playlist
+      else
+        raise NotFoundException.new("Playlist does not exist.")
+      end
+    else
+      return fetch_playlist(plid)
+    end
+  {% end %}
 end
 
 def fetch_playlist(plid : String)
@@ -412,30 +416,38 @@ def get_playlist_videos(playlist : InvidiousPlaylist | Playlist, offset : Int32,
     return [] of PlaylistVideo
   end
 
-  if playlist.is_a? InvidiousPlaylist
-    Invidious::Database::PlaylistVideos.select(playlist.id, playlist.index, offset, limit: 100)
-  else
-    if video_id
-      initial_data = YoutubeAPI.next({
-        "videoId"    => video_id,
-        "playlistId" => playlist.id,
-      })
-      offset = initial_data.dig?("contents", "twoColumnWatchNextResults", "playlist", "playlist", "currentIndex").try &.as_i || offset
+  {% if flag?(:no_postgresql) %}
+    return get_youtube_playlist_videos(playlist, offset, video_id)
+  {% else %}
+    if playlist.is_a? InvidiousPlaylist
+      Invidious::Database::PlaylistVideos.select(playlist.id, playlist.index, offset, limit: 100)
+    else
+      return get_youtube_playlist_videos(playlist, offset, video_id)
     end
+  {% end %}
+end
 
-    videos = [] of PlaylistVideo
-
-    until videos.size >= 200 || videos.size == playlist.video_count || offset >= playlist.video_count
-      # 100 videos per request
-      ctoken = produce_playlist_continuation(playlist.id, offset)
-      initial_data = YoutubeAPI.browse(ctoken)
-      videos += extract_playlist_videos(initial_data)
-
-      offset += 100
-    end
-
-    return videos
+def get_youtube_playlist_videos(playlist : Playlist, offset : Int32, video_id = nil)
+  if video_id
+    initial_data = YoutubeAPI.next({
+      "videoId"    => video_id,
+      "playlistId" => playlist.id,
+    })
+    offset = initial_data.dig?("contents", "twoColumnWatchNextResults", "playlist", "playlist", "currentIndex").try &.as_i || offset
   end
+
+  videos = [] of PlaylistVideo
+
+  until videos.size >= 200 || videos.size == playlist.video_count || offset >= playlist.video_count
+    # 100 videos per request
+    ctoken = produce_playlist_continuation(playlist.id, offset)
+    initial_data = YoutubeAPI.browse(ctoken)
+    videos += extract_playlist_videos(initial_data)
+
+    offset += 100
+  end
+
+  return videos
 end
 
 def extract_playlist_videos(initial_data : Hash(String, JSON::Any))

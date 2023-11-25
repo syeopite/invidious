@@ -1,3 +1,5 @@
+{% skip_file if flag?(:no_postgresql)%}
+
 class Invidious::Jobs::RefreshChannelsJob < Invidious::Jobs::BaseJob
   private getter db : DB::Database
 

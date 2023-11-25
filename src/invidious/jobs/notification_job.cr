@@ -1,3 +1,5 @@
+{% skip_file if flag?(:no_postgresql)%}
+
 class Invidious::Jobs::NotificationJob < Invidious::Jobs::BaseJob
   private getter connection_channel : ::Channel({Bool, ::Channel(PQ::Notification)})
   private getter pg_url : URI

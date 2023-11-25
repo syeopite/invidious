@@ -27,7 +27,7 @@ class Invidious::Jobs::StatisticsRefreshJob < Invidious::Jobs::BaseJob
     "playback" => {} of String => Int64 | Float64,
   }
 
-  private getter db : DB::Database
+  private getter db : DB::Database?
 
   def initialize(@db, @software_config : Hash(String, String))
   end
@@ -54,15 +54,16 @@ class Invidious::Jobs::StatisticsRefreshJob < Invidious::Jobs::BaseJob
 
   private def refresh_stats
     users = STATISTICS.dig("usage", "users").as(Hash(String, Int64))
-
-    users["total"] = Invidious::Database::Statistics.count_users_total
-    users["activeHalfyear"] = Invidious::Database::Statistics.count_users_active_1m
-    users["activeMonth"] = Invidious::Database::Statistics.count_users_active_6m
-
     STATISTICS["metadata"] = {
-      "updatedAt"              => Time.utc.to_unix,
-      "lastChannelRefreshedAt" => Invidious::Database::Statistics.channel_last_update.try &.to_unix || 0_i64,
+      "updatedAt" => Time.utc.to_unix,
+      "lastChannelRefreshedAt" => {% unless flag?(:no_postgresql) %}Invidious::Database::Statistics.channel_last_update.try &.to_unix || 0_i64 {% else %} 0_i64 {% end %}
     }
+
+    {% unless flag?(:no_postgresql) %}
+      users["total"] = Invidious::Database::Statistics.count_users_total
+      users["activeHalfyear"] = Invidious::Database::Statistics.count_users_active_1m
+      users["activeMonth"] = Invidious::Database::Statistics.count_users_active_6m
+    {% end %}
 
     # Reset playback requests tracker
     STATISTICS["playback"] = {} of String => Int64 | Float64

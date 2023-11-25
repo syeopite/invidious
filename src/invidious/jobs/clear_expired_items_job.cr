@@ -1,3 +1,5 @@
+{% skip_file if flag?(:no_postgresql)%}
+
 class Invidious::Jobs::ClearExpiredItemsJob < Invidious::Jobs::BaseJob
   # Remove items (videos, nonces, etc..) whose cache is outdated every hour.
   # Removes the need for a cron job.

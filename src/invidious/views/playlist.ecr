@@ -28,7 +28,7 @@
             </div>
         <%- else -%>
             <div class="pure-u">
-                <%- if IV::Database::Playlists.exists?(playlist.id) -%>
+                <%- if {% if flag?(:no_postgresql)%} false {% else %} IV::Database::Playlists.exists?(playlist.id) {% end %} -%>
                     <a class="pure-button pure-button-secondary low-profile" dir="auto" href="/subscribe_playlist?list=<%= plid %>">
                         <i class="icon ion-md-add"></i>&nbsp;<%= translate(locale, "Subscribe") %>
                     </a>

@@ -147,11 +147,13 @@ module Invidious::Routes::Embed
     #   PG_DB.exec("UPDATE users SET watched = array_append(watched, $1) WHERE email = $2", id, user.as(User).email)
     # end
 
-    if CONFIG.enable_user_notifications && notifications && notifications.includes? id
-      Invidious::Database::Users.remove_notification(user.as(User), id)
-      env.get("user").as(User).notifications.delete(id)
-      notifications.delete(id)
-    end
+    {% unless flag?(:no_postgresql) %}
+      if CONFIG.enable_user_notifications && notifications && notifications.includes? id
+        Invidious::Database::Users.remove_notification(user.as(User), id)
+        env.get("user").as(User).notifications.delete(id)
+        notifications.delete(id)
+      end
+    {% end %}
 
     fmt_stream = video.fmt_stream
     adaptive_fmts = video.adaptive_fmts

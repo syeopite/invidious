@@ -1,4 +1,5 @@
 {% skip_file if flag?(:api_only) %}
+{% skip_file if flag?(:no_postgresql) %}
 
 module Invidious::Routes::Login
   def self.login_page(env)

@@ -155,36 +155,38 @@ we're going to need to do it here in order to allow for translations.
                 <% end %>
             </p>
 
-            <% if user %>
-                <% playlists = Invidious::Database::Playlists.select_user_created_playlists(user.email) %>
-                <% if !playlists.empty? %>
-                    <form data-onsubmit="return_false" class="pure-form pure-form-stacked" action="/playlist_ajax" method="post" target="_blank">
-                        <div class="pure-control-group">
-                            <label for="playlist_id"><%= translate(locale, "Add to playlist: ") %></label>
-                            <select style="width:100%" name="playlist_id" id="playlist_id">
-                                <% playlists.each do |plid, playlist_title| %>
-                                    <option data-plid="<%= plid %>" value="<%= plid %>"><%= HTML.escape(playlist_title) %></option>
-                                <% end %>
-                            </select>
-                        </div>
+            <% {% unless flag?(:no_postgresql) %} %>
+                <% if user %>
+                    <% playlists = Invidious::Database::Playlists.select_user_created_playlists(user.email) %>
+                    <% if !playlists.empty? %>
+                        <form data-onsubmit="return_false" class="pure-form pure-form-stacked" action="/playlist_ajax" method="post" target="_blank">
+                            <div class="pure-control-group">
+                                <label for="playlist_id"><%= translate(locale, "Add to playlist: ") %></label>
+                                <select style="width:100%" name="playlist_id" id="playlist_id">
+                                    <% playlists.each do |plid, playlist_title| %>
+                                        <option data-plid="<%= plid %>" value="<%= plid %>"><%= HTML.escape(playlist_title) %></option>
+                                    <% end %>
+                                </select>
+                            </div>
 
-                        <input type="hidden" name="csrf_token" value="<%= URI.encode_www_form(env.get?("csrf_token").try &.as(String) || "") %>">
-                        <input type="hidden" name="action_add_video" value="1">
-                        <input type="hidden" name="video_id" value="<%= video.id %>">
-                        <button data-onclick="add_playlist_video" data-id="<%= video.id %>" type="submit" class="pure-button pure-button-primary">
-                            <b><%= translate(locale, "Add to playlist") %></b>
-                        </button>
-                    </form>
-                    <script id="playlist_data" type="application/json">
-                    <%=
-                    {
-                        "csrf_token" => URI.encode_www_form(env.get?("csrf_token").try &.as(String) || "")
-                    }.to_pretty_json
-                    %>
-                    </script>
-                    <script src="/js/playlist_widget.js?v=<%= Time.utc.to_unix_ms %>"></script>
+                            <input type="hidden" name="csrf_token" value="<%= URI.encode_www_form(env.get?("csrf_token").try &.as(String) || "") %>">
+                            <input type="hidden" name="action_add_video" value="1">
+                            <input type="hidden" name="video_id" value="<%= video.id %>">
+                            <button data-onclick="add_playlist_video" data-id="<%= video.id %>" type="submit" class="pure-button pure-button-primary">
+                                <b><%= translate(locale, "Add to playlist") %></b>
+                            </button>
+                        </form>
+                        <script id="playlist_data" type="application/json">
+                        <%=
+                        {
+                            "csrf_token" => URI.encode_www_form(env.get?("csrf_token").try &.as(String) || "")
+                        }.to_pretty_json
+                        %>
+                        </script>
+                        <script src="/js/playlist_widget.js?v=<%= Time.utc.to_unix_ms %>"></script>
+                    <% end %>
                 <% end %>
-            <% end %>
+            <% {% end %} %>
 
             <%= Invidious::Frontend::WatchPage.download_widget(locale, video, video_assets) %>
 

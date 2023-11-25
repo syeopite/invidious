@@ -73,32 +73,34 @@ module Invidious::Routes::BeforeAll
                 "/download",
               }.any? { |r| env.request.resource.starts_with? r }
 
-    if env.request.cookies.has_key? "SID"
-      sid = env.request.cookies["SID"].value
+    {% if !flag?(:no_postgresql) %}
+      if env.request.cookies.has_key? "SID"
+        sid = env.request.cookies["SID"].value
 
-      if sid.starts_with? "v1:"
-        raise "Cannot use token as SID"
+        if sid.starts_with? "v1:"
+          raise "Cannot use token as SID"
+        end
+
+        if email = Database::SessionIDs.select_email(sid)
+          user = Database::Users.select!(email: email)
+          csrf_token = generate_response(sid, {
+            ":authorize_token",
+            ":playlist_ajax",
+            ":signout",
+            ":subscription_ajax",
+            ":token_ajax",
+            ":watch_ajax",
+          }, HMAC_KEY, 1.week)
+
+          preferences = user.preferences
+          env.set "preferences", preferences
+
+          env.set "sid", sid
+          env.set "csrf_token", csrf_token
+          env.set "user", user
+        end
       end
-
-      if email = Database::SessionIDs.select_email(sid)
-        user = Database::Users.select!(email: email)
-        csrf_token = generate_response(sid, {
-          ":authorize_token",
-          ":playlist_ajax",
-          ":signout",
-          ":subscription_ajax",
-          ":token_ajax",
-          ":watch_ajax",
-        }, HMAC_KEY, 1.week)
-
-        preferences = user.preferences
-        env.set "preferences", preferences
-
-        env.set "sid", sid
-        env.set "csrf_token", csrf_token
-        env.set "user", user
-      end
-    end
+    {% end %}
 
     dark_mode = convert_theme(env.params.query["dark_mode"]?) || preferences.dark_mode.to_s
     thin_mode = env.params.query["thin_mode"]? || preferences.thin_mode.to_s

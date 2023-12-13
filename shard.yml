@@ -35,6 +35,8 @@ development_dependencies:
   ameba:
     github: crystal-ameba/ameba
     version: ~> 1.6.1
+  perf_tools:
+    github: crystal-lang/perf-tools
 
 crystal: ">= 1.10.0, < 2.0.0"
 

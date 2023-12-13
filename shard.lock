@@ -28,6 +28,10 @@ shards:
     git: https://github.com/kemalcr/kemal.git
     version: 1.6.0
 
+  perf_tools:
+    git: https://github.com/crystal-lang/perf-tools.git
+    version: 0.1.0+git.commit.25de6ca509c92d6859d8143cee7e8eea3c2c174b
+
   pg:
     git: https://github.com/will/crystal-pg.git
     version: 0.28.0

@@ -203,6 +203,8 @@ Invidious::Jobs.register Invidious::Jobs::ClearExpiredItemsJob.new
 
 Invidious::Jobs.register Invidious::Jobs::InstanceListRefreshJob.new
 
+Invidious::Jobs.register Invidious::Jobs::LogMemory.new
+
 Invidious::Jobs.start_all
 
 def popular_videos

@@ -1,4 +1,5 @@
 require "perf_tools/mem_prof"
+require "perf_tools/fiber_trace"
 
 class Invidious::Jobs::LogMemory < Invidious::Jobs::BaseJob
   def begin
@@ -6,15 +7,20 @@ class Invidious::Jobs::LogMemory < Invidious::Jobs::BaseJob
       Dir.mkdir("perftools_memprof") if !Dir.exists?("perftools_memprof")
       Dir.mkdir("perftools_memprof/counts") if !Dir.exists?("perftools_memprof/counts")
       Dir.mkdir("perftools_memprof/allocations") if !Dir.exists?("perftools_memprof/allocations")
+      Dir.mkdir("perftools_memprof/fibers") if !Dir.exists?("perftools_memprof/fibers")
 
       LOGGER.info("jobs: running PerfTools::MemProf")
 
-      File.open("perftools_memprof/counts/#{Time.utc.to_unix}.md", "w") do |file|
+      File.open("perftools_memprof/counts/#{Time.utc.to_unix}", "w") do |file|
         PerfTools::MemProf.log_object_counts(file)
       end
 
-      File.open("perftools_memprof/allocations/#{Time.utc.to_unix}.md", "w") do |file|
+      File.open("perftools_memprof/allocations/#{Time.utc.to_unix}", "w") do |file|
         PerfTools::MemProf.pretty_log_allocations(file)
+      end
+
+      File.open("perftools_memprof/fibers/#{Time.utc.to_unix}.md", "w") do |file|
+        PerfTools::FiberTrace.pretty_log_fibers(file)
       end
 
       LOGGER.info("jobs: finished running PerfTools::MemProf")

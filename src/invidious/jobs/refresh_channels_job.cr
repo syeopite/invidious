@@ -27,7 +27,7 @@ class Invidious::Jobs::RefreshChannelsJob < Invidious::Jobs::BaseJob
 
           LOGGER.debug("RefreshChannelsJob: #{id} : Spawning fiber")
           active_fibers += 1
-          spawn do
+          spawn name: "fiber to refresh channel: #{id}" do
             begin
               LOGGER.trace("RefreshChannelsJob: #{id} fiber : Fetching channel")
               channel = fetch_channel(id, pull_all_videos: CONFIG.full_refresh)

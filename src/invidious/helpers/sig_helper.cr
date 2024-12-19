@@ -187,7 +187,7 @@ module Invidious::SigHelper
 
       LOGGER.debug("SigHelper: Multiplexor listening")
 
-      spawn do
+      spawn name: "sighelper connection fiber" do
         loop do
           begin
             receive_data

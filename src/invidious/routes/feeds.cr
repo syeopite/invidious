@@ -407,7 +407,7 @@ module Invidious::Routes::Feeds
       haltf env, status_code: 200
     end
 
-    spawn do
+    spawn name: "fiber for push notification feed" do
       # TODO: unify this with the other almost identical looking parts in this and channels.cr somehow?
       namespaces = {
         "yt"      => "http://www.youtube.com/xml/schemas/2015",

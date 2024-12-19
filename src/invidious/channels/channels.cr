@@ -110,7 +110,7 @@ def get_batch_channels(channels)
   finished_channel = Channel(String | Nil).new
   max_threads = 10
 
-  spawn do
+  spawn name: "Getting batch channels" do
     active_threads = 0
     active_channel = Channel(Nil).new
 
@@ -121,7 +121,7 @@ def get_batch_channels(channels)
       end
 
       active_threads += 1
-      spawn do
+      spawn name: "Batch channel: #{ucid}" do
         begin
           get_channel(ucid)
           finished_channel.send(ucid)

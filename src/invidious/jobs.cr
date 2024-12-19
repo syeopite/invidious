@@ -34,7 +34,7 @@ module Invidious::Jobs
       # Don't run the main rountine if the job is disabled by config
       next if job.disabled?
 
-      spawn { job.begin }
+      spawn name: "#{job.class}" { job.begin }
     end
   end
 end

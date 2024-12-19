@@ -27,7 +27,7 @@ class Invidious::Jobs::SubscribeToFeedsJob < Invidious::Jobs::BaseJob
 
           active_fibers += 1
 
-          spawn do
+          spawn name: "fiber to refresh subscribed-to user feed" do
             begin
               response = subscribe_pubsub(ucid, hmac_key)
 

@@ -22,7 +22,7 @@ class Invidious::Jobs::RefreshFeedsJob < Invidious::Jobs::BaseJob
           end
 
           active_fibers += 1
-          spawn do
+          spawn name: "fiber to refresh user feed" do
             begin
               # Drop outdated views
               column_array = Invidious::Database.get_column_array(db, view_name)

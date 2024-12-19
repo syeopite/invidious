@@ -66,7 +66,7 @@ def create_notification_stream(env, topics, connection_channel)
   id = 0
 
   if topics.includes? "debug"
-    spawn do
+    spawn name: "notification stream debug" do
       begin
         loop do
           time_span = [0, 0, 0, 0]
@@ -93,7 +93,7 @@ def create_notification_stream(env, topics, connection_channel)
     end
   end
 
-  spawn do
+  spawn name: "notification stream channel videos" do
     begin
       if since
         since_unix = Time.unix(since.not_nil!)
@@ -119,7 +119,7 @@ def create_notification_stream(env, topics, connection_channel)
     end
   end
 
-  spawn do
+  spawn name: "notification stream new video" do
     begin
       loop do
         event = connection.receive

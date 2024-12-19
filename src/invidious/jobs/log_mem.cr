@@ -3,6 +3,10 @@ require "perf_tools/fiber_trace"
 
 class Invidious::Jobs::LogMemory < Invidious::Jobs::BaseJob
   def begin
+    LOGGER.info "Sleeping 5 seconds to await completion of other jobs before first run of LogMemory job"
+    sleep 5.seconds
+    LOGGER.info "Begin running LogMemory job"
+
     loop do
       Dir.mkdir("perftools_memprof") if !Dir.exists?("perftools_memprof")
       Dir.mkdir("perftools_memprof/counts") if !Dir.exists?("perftools_memprof/counts")

@@ -12,7 +12,7 @@ class Invidious::Jobs::LogMemory < Invidious::Jobs::BaseJob
       Dir.mkdir("perftools_memprof/allocations") if !Dir.exists?("perftools_memprof/allocations")
       Dir.mkdir("perftools_memprof/fibers") if !Dir.exists?("perftools_memprof/fibers")
 
-      LOGGER.info("jobs: running PerfTools::MemProf")
+      LOGGER.info("jobs: running PerfTools::MemProf and PerfTools::FiberTrace")
 
       File.open("perftools_memprof/allocations/#{Time.utc.to_unix}-#{Time.local.to_s}", "w") do |file|
         PerfTools::MemProf.pretty_log_allocations(file)
@@ -22,7 +22,7 @@ class Invidious::Jobs::LogMemory < Invidious::Jobs::BaseJob
         PerfTools::FiberTrace.pretty_log_fibers(file)
       end
 
-      LOGGER.info("jobs: finished running PerfTools::MemProf")
+      LOGGER.info("jobs: finished running PerfTools::MemProf and PerfTools::FiberTrace")
 
       sleep 30.minutes
     end

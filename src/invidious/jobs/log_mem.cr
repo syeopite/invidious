@@ -14,11 +14,11 @@ class Invidious::Jobs::LogMemory < Invidious::Jobs::BaseJob
 
       LOGGER.info("jobs: running PerfTools::MemProf")
 
-      File.open("perftools_memprof/allocations/#{Time.utc.to_unix}", "w") do |file|
+      File.open("perftools_memprof/allocations/#{Time.utc.to_unix}-#{Time.local.to_s}", "w") do |file|
         PerfTools::MemProf.pretty_log_allocations(file)
       end
 
-      File.open("perftools_memprof/fibers/#{Time.utc.to_unix}.md", "w") do |file|
+      File.open("perftools_memprof/fibers/#{Time.utc.to_unix}-#{Time.local.to_s}.md", "w") do |file|
         PerfTools::FiberTrace.pretty_log_fibers(file)
       end
 

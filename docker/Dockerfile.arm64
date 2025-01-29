@@ -24,5 +24,4 @@ RUN crystal build ./src/invidious.cr \
         --error-trace --progress \
         -Dskip_videojs_download \
         --no-codegen \
-        --link-flags "-lxml2 -llzma"; \
-    fi
+        --link-flags "-lxml2 -llzma"

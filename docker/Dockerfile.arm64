@@ -28,6 +28,7 @@ RUN if [[ "${release}" == 1 ]] ; then \
         crystal build ./src/invidious.cr \
         --static --warnings all \
         --error-trace --progress \
+        -Dskip_videojs_download \
         --link-flags "-lxml2 -llzma"; \
     fi
 

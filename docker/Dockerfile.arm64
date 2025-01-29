@@ -1,6 +1,11 @@
 FROM alpine:3.21.2 AS builder
-RUN --mount=type=cache,target=/var/cache/apk apk add 'crystal=1.14.0-r0' shards sqlite-static yaml-static yaml-dev libxml2-static \
-       zlib-static openssl-libs-static openssl-dev musl-dev xz-static
+RUN --mount=type=cache,target=/var/cache/apk \ 
+       apk add 'crystal=1.14.0-r0' shards sqlite-static yaml-static yaml-dev libxml2-static \
+       zlib-static openssl-libs-static openssl-dev musl-dev xz-static \
+       # Core dependencies
+       gcc gmp-dev libevent-static musl-dev pcre-dev pcre2-dev \ 
+       # stdlib dependencies
+       gc-dev libxml2-dev libxml2-static openssl-dev openssl-libs-static tzdata yaml-static zlib-static xz-static
 
 ARG release
 
@@ -24,5 +29,4 @@ RUN crystal build ./src/invidious.cr \
         --static --warnings all \
         --error-trace --progress \
         -Dskip_videojs_download \
-        --no-codegen \
         --link-flags "-lxml2 -llzma"

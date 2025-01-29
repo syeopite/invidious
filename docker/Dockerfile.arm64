@@ -34,7 +34,7 @@ RUN if [[ "${release}" == 1 ]] ; then \
     fi
 
 FROM alpine:3.20
-RUN apk add --no-cache rsvg-convert ttf-opensans tini tzdata
+RUN apk add --no-cache rsvg-convert ttf-opensans tini libxml2-dev libxml2-static openssl-dev openssl-libs-static tzdata yaml-static zlib-static xz-static
 WORKDIR /invidious
 RUN addgroup -g 1000 -S invidious && \
     adduser -u 1000 -S invidious -G invidious

@@ -71,6 +71,6 @@ end
 
 module ECR
   macro embed(filename, io_name)
-    \{{ run("./override_ecr_process.cr", {{filename}}, {{io_name.id.stringify}}) }}
+    \{{ run("./src/invidious/helpers/override_ecr_process.cr", {{filename}}, {{io_name.id.stringify}}) }}
   end
 end

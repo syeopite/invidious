@@ -1,5 +1,5 @@
 FROM alpine:3.20 AS builder
-RUN apk add --no-cache 'crystal=1.12.2-r0' shards sqlite-static yaml-static yaml-dev libxml2-static \
+RUN --mount=type=cache,target=/var/cache/apk apk add 'crystal=1.12.2-r0' shards sqlite-static yaml-static yaml-dev libxml2-static \
        zlib-static openssl-libs-static openssl-dev musl-dev xz-static
 
 ARG release
@@ -20,6 +20,7 @@ COPY ./assets/ ./assets/
 COPY ./videojs-dependencies.yml ./videojs-dependencies.yml
 
 RUN crystal build ./src/invidious.cr \
+       --debug \
         --static --warnings all \
         --error-trace --progress \
         -Dskip_videojs_download \

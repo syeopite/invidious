@@ -30,7 +30,8 @@ RUN if [[ "${release}" == 1 ]] ; then \
     else \
         crystal build ./src/invidious.cr \
         --static --warnings all \
-        --link-flags "-lxml2 -llzma"; \
+        --link-flags "-lxml2 -llzma" \
+	--error-trace; \
     fi
 
 FROM alpine:3.20

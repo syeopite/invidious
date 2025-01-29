@@ -68,3 +68,9 @@ class PG::ResultSet
     @fields.not_nil![index]
   end
 end
+
+module ECR
+  macro embed(filename, io_name)
+    \{{ run("./override_ecr_process.cr", {{filename}}, {{io_name.id.stringify}}) }}
+  end
+end

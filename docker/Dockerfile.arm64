@@ -1,6 +1,6 @@
 FROM alpine:3.20 AS builder
 RUN apk add --no-cache 'crystal=1.12.2-r0' shards sqlite-static yaml-static yaml-dev libxml2-static \
-       zlib-static openssl-libs-static openssl-dev musl-dev xz-static
+       zlib-static openssl-libs-static openssl-dev musl-dev xz-static   gc-dev libxml2-dev libxml2-static openssl-dev openssl-libs-static tzdata yaml-static zlib-static xz-static
 
 ARG release
 
@@ -34,7 +34,8 @@ RUN if [[ "${release}" == 1 ]] ; then \
     fi
 
 FROM alpine:3.20
-RUN apk add --no-cache rsvg-convert ttf-opensans tini libxml2-dev libxml2-static openssl-dev openssl-libs-static tzdata yaml-static zlib-static xz-static
+RUN apk add --no-cache rsvg-convert ttf-opensans tini libxml2-dev libxml2-static openssl-dev openssl-libs-static tzdata yaml-static zlib-static xz-static \
+gcc gmp-dev libevent-static musl-dev pcre-dev pcre2-dev
 WORKDIR /invidious
 RUN addgroup -g 1000 -S invidious && \
     adduser -u 1000 -S invidious -G invidious

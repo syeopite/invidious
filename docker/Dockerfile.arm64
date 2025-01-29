@@ -29,6 +29,7 @@ RUN if [[ "${release}" == 1 ]] ; then \
         --static --warnings all \
         --error-trace --progress \
         -Dskip_videojs_download \
+        --no-codegen \
         --link-flags "-lxml2 -llzma"; \
     fi
 

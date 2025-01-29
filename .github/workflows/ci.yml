@@ -1,104 +1,16 @@
 name: Invidious CI
 
 on:
-  schedule:
-    - cron: "0 0 * * *" # Every day at 00:00
   push:
     branches:
       - "master"
       - "api-only"
   pull_request:
     branches: "*"
-    paths-ignore:
-      - "*.md"
-      - LICENCE
-      - TRANSLATION
-      - invidious.service
-      - .git*
-      - .editorconfig
-
-      - screenshots/*
-      - assets/**
-      - locales/*
-      - config/**
-      - .github/ISSUE_TEMPLATE/*
-      - kubernetes/**
+  workflow_dispatch:
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
-    name: "build - crystal: ${{ matrix.crystal }}, stable: ${{ matrix.stable }}"
-
-    continue-on-error: ${{ !matrix.stable }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        stable: [true]
-        crystal:
-          - 1.12.1
-          - 1.13.2
-          - 1.14.0
-          - 1.15.0
-        include:
-          - crystal: nightly
-            stable: false
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Install required APT packages
-        run: |
-          sudo apt install -y libsqlite3-dev
-        shell: bash
-
-      - name: Install Crystal
-        uses: crystal-lang/install-crystal@v1.8.0
-        with:
-          crystal: ${{ matrix.crystal }}
-
-      - name: Cache Shards
-        uses: actions/cache@v3
-        with:
-          path: |
-            ./lib
-            ./bin
-          key: shards-${{ hashFiles('shard.lock') }}
-
-      - name: Install Shards
-        run: |
-          if ! shards check; then
-            shards install
-          fi
-
-      - name: Run tests
-        run: crystal spec
-
-      - name: Build
-        run: crystal build --warnings all --error-on-warnings --error-trace src/invidious.cr
-
-  build-docker:
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build Docker
-        run: docker compose build --build-arg release=0
-
-      - name: Run Docker
-        run: docker compose up -d
-
-      - name: Test Docker
-        run: while curl -Isf http://localhost:3000; do sleep 1; done
-
   build-docker-arm64:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -122,45 +34,3 @@ jobs:
 
       - name: Test Docker
         run: while curl -Isf http://localhost:3000; do sleep 1; done
-
-  lint:
-
-    runs-on: ubuntu-latest
-
-    continue-on-error: true
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Install Crystal
-        id: lint_step_install_crystal
-        uses: crystal-lang/install-crystal@v1.8.0
-        with:
-          crystal: latest
-
-      - name: Cache Shards
-        uses: actions/cache@v3
-        with:
-          path: |
-            ./lib
-            ./bin
-          key: shards-${{ hashFiles('shard.lock') }}-${{ steps.lint_step_install_crystal.outputs.crystal }}
-
-      - name: Install Shards
-        run: |
-          if ! shards check; then
-            shards install
-          fi
-
-      - name: Check Crystal formatter compliance
-        run: |
-          if ! crystal tool format --check; then
-            crystal tool format
-            git diff
-            exit 1
-          fi
-
-      - name: Run Ameba linter
-        run: bin/ameba

@@ -37,7 +37,7 @@ development_dependencies:
     version: ~> 1.6.1
   perf_tools:
     github: crystal-lang/perf-tools
-    version: '*'
+    branch: "main"
 
 crystal: ">= 1.10.0, < 2.0.0"
 

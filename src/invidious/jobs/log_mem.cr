@@ -14,7 +14,7 @@ class Invidious::Jobs::LogMemory < Invidious::Jobs::BaseJob
 
       LOGGER.info("jobs: running PerfTools::MemProf and PerfTools::FiberTrace")
 
-      File.open("perftools_memprof/allocations/#{Time.utc.to_unix}-#{Time.local.to_s}", "w") do |file|
+      File.open("perftools_memprof/allocations/#{Time.utc.to_unix}-#{Time.local.to_s}.md", "w") do |file|
         PerfTools::MemProf.pretty_log_allocations(file)
       end
 

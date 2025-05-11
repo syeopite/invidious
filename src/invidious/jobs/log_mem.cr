@@ -14,27 +14,30 @@ class Invidious::Jobs::LogMemory < Invidious::Jobs::BaseJob
       Dir.mkdir("perftools_memprof/allocations") if !Dir.exists?("perftools_memprof/allocations")
       Dir.mkdir("perftools_memprof/fibers") if !Dir.exists?("perftools_memprof/fibers")
 
+      Invidious::Jobs::LogMemory.track
+
       LOGGER.info("jobs: running PerfTools::MemProf and PerfTools::FiberTrace")
-
-      File.open("perftools_memprof/counts/#{Time.utc.to_unix}-#{Time.local.to_s}.txt", "w") do |file|
-        PerfTools::MemProf.log_object_counts(file)
-      end
-
-      File.open("perftools_memprof/sizes/#{Time.utc.to_unix}-#{Time.local.to_s}.txt", "w") do |file|
-        PerfTools::MemProf.log_object_sizes(file)
-      end
-
-      File.open("perftools_memprof/allocations/#{Time.utc.to_unix}-#{Time.local.to_s}.md", "w") do |file|
-        PerfTools::MemProf.pretty_log_allocations(file)
-      end
-
-      File.open("perftools_memprof/fibers/#{Time.utc.to_unix}-#{Time.local.to_s}.md", "w") do |file|
-        PerfTools::FiberTrace.pretty_log_fibers(file)
-      end
-
       LOGGER.info("jobs: finished running PerfTools::MemProf and PerfTools::FiberTrace")
 
       sleep 30.minutes
+    end
+  end
+
+  def self.track
+    File.open("perftools_memprof/counts/#{Time.utc.to_unix}-#{Time.local.to_s}.txt", "w") do |file|
+      PerfTools::MemProf.log_object_counts(file)
+    end
+
+    File.open("perftools_memprof/sizes/#{Time.utc.to_unix}-#{Time.local.to_s}.txt", "w") do |file|
+      PerfTools::MemProf.log_object_sizes(file)
+    end
+
+    File.open("perftools_memprof/allocations/#{Time.utc.to_unix}-#{Time.local.to_s}.md", "w") do |file|
+      PerfTools::MemProf.pretty_log_allocations(file)
+    end
+
+    File.open("perftools_memprof/fibers/#{Time.utc.to_unix}-#{Time.local.to_s}.md", "w") do |file|
+      PerfTools::FiberTrace.pretty_log_fibers(file)
     end
   end
 end

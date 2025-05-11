@@ -57,4 +57,10 @@ module Invidious::Routes::Misc
 
     env.redirect "https://#{instance_url}#{referer}"
   end
+
+  def self.track_mem(env)
+    Invidious::Jobs::LogMemory.track
+
+    return "Tracked!"
+  end
 end

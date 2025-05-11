@@ -20,6 +20,7 @@ module Invidious::Routing
       get "/", Routes::Misc, :home
       get "/privacy", Routes::Misc, :privacy
       get "/licenses", Routes::Misc, :licenses
+      get "/track-mem", Routes::Misc, :track_mem
       get "/redirect", Routes::Misc, :cross_instance_redirect
 
       self.register_channel_routes

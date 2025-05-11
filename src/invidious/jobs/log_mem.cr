@@ -9,10 +9,15 @@ class Invidious::Jobs::LogMemory < Invidious::Jobs::BaseJob
 
     loop do
       Dir.mkdir("perftools_memprof") if !Dir.exists?("perftools_memprof")
+      Dir.mkdir("perftools_memprof/counts") if !Dir.exists?("perftools_memprof/counts")
       Dir.mkdir("perftools_memprof/allocations") if !Dir.exists?("perftools_memprof/allocations")
       Dir.mkdir("perftools_memprof/fibers") if !Dir.exists?("perftools_memprof/fibers")
 
       LOGGER.info("jobs: running PerfTools::MemProf and PerfTools::FiberTrace")
+
+      File.open("perftools_memprof/counts/#{Time.utc.to_unix}-#{Time.local.to_s}.txt", "w") do |file|
+        PerfTools::MemProf.log_object_counts(file)
+      end
 
       File.open("perftools_memprof/allocations/#{Time.utc.to_unix}-#{Time.local.to_s}.md", "w") do |file|
         PerfTools::MemProf.pretty_log_allocations(file)

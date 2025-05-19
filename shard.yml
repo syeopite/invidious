@@ -27,6 +27,9 @@ dependencies:
   http_proxy:
     github: mamantoha/http_proxy
     version: ~> 0.10.3
+  baked_file_system:
+    github: schovi/baked_file_system
+    version: ~> 0.10.0
 
 development_dependencies:
   spectator:

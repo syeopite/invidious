@@ -12,6 +12,10 @@ shards:
     git: https://github.com/sija/backtracer.cr.git
     version: 1.2.2
 
+  baked_file_system:
+    git: https://github.com/schovi/baked_file_system.git
+    version: 0.10.0
+
   db:
     git: https://github.com/crystal-lang/crystal-db.git
     version: 0.13.1

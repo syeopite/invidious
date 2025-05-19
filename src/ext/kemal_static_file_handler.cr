@@ -78,7 +78,7 @@ def send_file(env : HTTP::Server::Context, file_path : String, data : Slice(UInt
     return multipart(file, env)
   end
 
-  condition = config.is_a?(Hash) && config["gzip"]? == true && filesize > minsize && Kemal::Utils.zip_types(file_path)
+  condition = config.is_a?(Hash) && config["gzip"]? == true && filesize > minsize && Kemal::Utils.zip_types(file_path) && !env.response.headers.has_key?("Content-Encoding")
   if condition && request_headers.includes_word?("Accept-Encoding", "gzip")
     env.response.headers["Content-Encoding"] = "gzip"
     Compress::Gzip::Writer.open(env.response) do |deflate|
@@ -128,48 +128,34 @@ module Kemal
         return
       end
 
-      expanded_path = File.expand_path(request_path, "/")
-      is_dir_path = if original_path.ends_with?('/') && !expanded_path.ends_with? '/'
-                      expanded_path = expanded_path + '/'
-                      true
-                    else
-                      expanded_path.ends_with? '/'
-                    end
+      {% # Static files are baked into the binary when
+      # the bake_static_files flag is passed.
+      #
+      # There is no need to cache them because they
+      # will already be in the binary.
 
-      file_path = File.join(@public_dir, expanded_path)
+  %}
+      {% if flag?(:bake_static_files) %}
+        file_path = Path[@public_dir.basename].join(request_path).normalize.expand("/").to_s
+        return call_next(context) unless (file_data = Invidious::Baked.get?(file_path))
 
-      if file = @cached_files[file_path]?
-        last_modified = file[:filestat].modification_time
-        add_cache_headers(context.response.headers, last_modified)
+        file_data_in_bytes = Bytes.new(file_data.size)
+        file_data.read(file_data_in_bytes)
 
-        if cache_request?(context, last_modified)
-          context.response.status = HTTP::Status::NOT_MODIFIED
-          return
-        end
+        return send_file(context, file_path, file_data_in_bytes, Invidious::Baked::PLACEHOLDER_FILE_STAT)
+      {% else %}
+        expanded_path = File.expand_path(request_path, "/")
+        is_dir_path = if original_path.ends_with?('/') && !expanded_path.ends_with? '/'
+                        expanded_path = expanded_path + '/'
+                        true
+                      else
+                        expanded_path.ends_with? '/'
+                      end
 
-        send_file(context, file_path, file[:data], file[:filestat])
-      else
-        file_info = File.info?(file_path)
-        is_dir = file_info.try &.directory? || false
-        is_file = file_info.try &.file? || false
+        file_path = File.join(@public_dir, expanded_path)
 
-        if request_path != expanded_path
-          redirect_to context, expanded_path
-        elsif is_dir && !is_dir_path
-          redirect_to context, expanded_path + '/'
-        end
-
-        return call_next(context) if file_info.nil?
-
-        if is_dir
-          if config.is_a?(Hash) && config["dir_listing"] == true
-            context.response.content_type = "text/html"
-            directory_listing(context.response, request_path, file_path)
-          else
-            call_next(context)
-          end
-        elsif is_file
-          last_modified = file_info.modification_time
+        if file = @cached_files[file_path]?
+          last_modified = file[:filestat].modification_time
           add_cache_headers(context.response.headers, last_modified)
 
           if cache_request?(context, last_modified)
@@ -177,19 +163,50 @@ module Kemal
             return
           end
 
-          if @cached_files.sum(&.[1][:data].bytesize) + (size = File.size(file_path)) < CACHE_LIMIT
-            data = Bytes.new(size)
-            File.open(file_path, &.read(data))
+          send_file(context, file_path, file[:data], file[:filestat])
+        else
+          file_info = File.info?(file_path)
+          is_dir = file_info.try &.directory? || false
+          is_file = file_info.try &.file? || false
 
-            @cached_files[file_path] = {data: data, filestat: file_info}
-            send_file(context, file_path, data, file_info)
-          else
-            send_file(context, file_path)
+          if request_path != expanded_path
+            redirect_to context, expanded_path
+          elsif is_dir && !is_dir_path
+            redirect_to context, expanded_path + '/'
           end
-        else # Not a normal file (FIFO/device/socket)
-          call_next(context)
+
+          return call_next(context) if file_info.nil?
+
+          if is_dir
+            if config.is_a?(Hash) && config["dir_listing"] == true
+              context.response.content_type = "text/html"
+              directory_listing(context.response, request_path, file_path)
+            else
+              call_next(context)
+            end
+          elsif is_file
+            last_modified = file_info.modification_time
+            add_cache_headers(context.response.headers, last_modified)
+
+            if cache_request?(context, last_modified)
+              context.response.status = HTTP::Status::NOT_MODIFIED
+              return
+            end
+
+            if @cached_files.sum(&.[1][:data].bytesize) + (size = File.size(file_path)) < CACHE_LIMIT
+              data = Bytes.new(size)
+              File.open(file_path, &.read(data))
+
+              @cached_files[file_path] = {data: data, filestat: file_info}
+              send_file(context, file_path, data, file_info)
+            else
+              send_file(context, file_path)
+            end
+          else # Not a normal file (FIFO/device/socket)
+            call_next(context)
+          end
         end
-      end
+      {% end %}
     end
   end
 end

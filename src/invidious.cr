@@ -21,6 +21,21 @@ require "file_utils"
 require "kemal"
 require "./ext/kemal_static_file_handler.cr"
 
+{% if !flag?(:skip_videojs_download) %}
+  # Resolve player dependencies. This is done at compile time.
+  #
+  # Running the script by itself would show some colorful feedback while this doesn't.
+  # Perhaps we should just move the script to runtime in order to get that feedback?
+
+  {% puts "\nChecking player dependencies, this may take more than 20 minutes... If it is stuck, check your internet connection.\n" %}
+  {% if flag?(:minified_player_dependencies) %}
+    {% puts run("../scripts/fetch-player-dependencies.cr", "--minified").stringify %}
+  {% else %}
+    {% puts run("../scripts/fetch-player-dependencies.cr").stringify %}
+  {% end %}
+  {% puts "\nDone checking player dependencies, now compiling Invidious...\n" %}
+{% end %}
+
 # Bake static assets into memory if requested
 {% if flag?(:bake_static_files) %}
   require "./invidious/optional/baked.cr"
@@ -153,21 +168,6 @@ LOGGER = Invidious::LogHandler.new(OUTPUT, CONFIG.log_level, CONFIG.colorize_log
 
 # Check table integrity
 Invidious::Database.check_integrity(CONFIG)
-
-{% if !flag?(:skip_videojs_download) %}
-  # Resolve player dependencies. This is done at compile time.
-  #
-  # Running the script by itself would show some colorful feedback while this doesn't.
-  # Perhaps we should just move the script to runtime in order to get that feedback?
-
-  {% puts "\nChecking player dependencies, this may take more than 20 minutes... If it is stuck, check your internet connection.\n" %}
-  {% if flag?(:minified_player_dependencies) %}
-    {% puts run("../scripts/fetch-player-dependencies.cr", "--minified").stringify %}
-  {% else %}
-    {% puts run("../scripts/fetch-player-dependencies.cr").stringify %}
-  {% end %}
-  {% puts "\nDone checking player dependencies, now compiling Invidious...\n" %}
-{% end %}
 
 # Misc
 

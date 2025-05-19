@@ -21,6 +21,11 @@ require "file_utils"
 require "kemal"
 require "./ext/kemal_static_file_handler.cr"
 
+# Bake static assets into memory if requested
+{% if flag?(:bake_static_files) %}
+  require "./invidious/optional/baked.cr"
+{% end %}
+
 require "http_proxy"
 require "athena-negotiation"
 require "openssl/hmac"
@@ -56,11 +61,6 @@ end
 
 # Simple alias to make code easier to read
 alias IV = Invidious
-
-# Bake static assets into memory if requested
-{% if flag?(:bake_static_files) %}
-  require "./invidious/optional/baked.cr"
-{% end %}
 
 CONFIG   = Config.load
 HMAC_KEY = CONFIG.hmac_key

@@ -88,7 +88,11 @@ def load_all_locales
   locales = {} of String => Hash(String, JSON::Any)
 
   LOCALES_LIST.each_key do |name|
-    locales[name] = JSON.parse(File.read("locales/#{name}.json")).as_h
+    {% if flag?(:bake_static_files) %}
+      locales[name] = JSON.parse(Invidious::Baked.get("/locales/#{name}.json")).as_h
+    {% else %}
+      locales[name] = JSON.parse(File.read("locales/#{name}.json")).as_h
+    {% end %}
   end
 
   return locales

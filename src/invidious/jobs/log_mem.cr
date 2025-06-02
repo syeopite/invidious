@@ -24,19 +24,21 @@ class Invidious::Jobs::LogMemory < Invidious::Jobs::BaseJob
   end
 
   def self.track
-    File.open("perftools_memprof/counts/#{Time.utc.to_unix}-#{Time.local.to_s}.txt", "w") do |file|
+    timestamp_file_name = "#{Time.utc.to_unix}-#{Time.local.to_s}"
+
+    File.open("perftools_memprof/counts/#{timestamp_file_name}.txt", "w") do |file|
       PerfTools::MemProf.log_object_counts(file)
     end
 
-    File.open("perftools_memprof/sizes/#{Time.utc.to_unix}-#{Time.local.to_s}.txt", "w") do |file|
+    File.open("perftools_memprof/sizes/#{timestamp_file_name}.txt", "w") do |file|
       PerfTools::MemProf.log_object_sizes(file)
     end
 
-    File.open("perftools_memprof/allocations/#{Time.utc.to_unix}-#{Time.local.to_s}.md", "w") do |file|
+    File.open("perftools_memprof/allocations/#{timestamp_file_name}.md", "w") do |file|
       PerfTools::MemProf.pretty_log_allocations(file)
     end
 
-    File.open("perftools_memprof/fibers/#{Time.utc.to_unix}-#{Time.local.to_s}.md", "w") do |file|
+    File.open("perftools_memprof/fibers/#{timestamp_file_name}.md", "w") do |file|
       PerfTools::FiberTrace.pretty_log_fibers(file)
     end
   end

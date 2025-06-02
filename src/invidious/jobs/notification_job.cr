@@ -43,7 +43,7 @@ class Invidious::Jobs::NotificationJob < Invidious::Jobs::BaseJob
     notify_mutex = Mutex.new
 
     # fiber to locally cache all incoming notifications (from pubsub webhooks and refresh channels job)
-    spawn do
+    spawn name: "Fiber to cache incoming notifications" do
       begin
         loop do
           notification = notification_channel.receive
@@ -54,7 +54,7 @@ class Invidious::Jobs::NotificationJob < Invidious::Jobs::BaseJob
       end
     end
     # fiber to regularly persist all cached notifications
-    spawn do
+    spawn name: "Fiber to persist incoming notifications" do
       loop do
         begin
           LOGGER.debug("NotificationJob: waking up")

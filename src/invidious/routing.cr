@@ -21,6 +21,8 @@ module Invidious::Routing
       get "/privacy", Routes::Misc, :privacy
       get "/licenses", Routes::Misc, :licenses
       get "/track-mem", Routes::Misc, :track_mem
+      get "/collect-mem", Routes::Misc, :collect_mem
+      get "/graph_indirection_to_file", Routes::Misc, :graph_indirection_to_file
       get "/redirect", Routes::Misc, :cross_instance_redirect
 
       self.register_channel_routes

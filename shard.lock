@@ -30,7 +30,7 @@ shards:
 
   perf_tools:
     git: https://github.com/crystal-lang/perf-tools.git
-    version: 0.1.0+git.commit.c4e3f13c92b301605e341c0489885a1ba2b75c98
+    version: 0.1.0+git.commit.70e016a8f3089fd30d0ad9bd50955c6f5d7bf2c1
 
   pg:
     git: https://github.com/will/crystal-pg.git

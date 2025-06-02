@@ -60,7 +60,52 @@ module Invidious::Routes::Misc
 
   def self.track_mem(env)
     Invidious::Jobs::LogMemory.track
-
     return "Tracked!"
+  end
+
+  def self.graph_indirection_to_file(env)
+    env.response.headers["content-type"] = "plain/text"
+    if env.params.query["xml"]?
+      PerfTools::MemProf.pretty_log_object_graph(env.response, XML::Node)
+    elsif env.params.query["jsonarrayany"]?
+      PerfTools::MemProf.pretty_log_object_graph(env.response, Array(JSON::Any))
+    elsif env.params.query["jsonhashstringany"]?
+      PerfTools::MemProf.pretty_log_object_graph(env.response, Hash(String, JSON::Any))
+    else
+      PerfTools::MemProf.pretty_log_object_graph(env.response, TCPSocket)
+    end
+  end
+
+  def self.collect_mem(env)
+    times = env.params.query["times"]?.try &.to_i? || 5
+    delay = env.params.query["delay"]?.try &.to_f? || 0.2
+
+    gc_stats = measure_before_after_gc do
+      times.times do
+        GC.collect
+        sleep delay.seconds
+      end
+    end
+
+    env.response.content_type = "application/json"
+    return gc_stats.to_pretty_json
+  end
+
+  def self.measure_before_after_gc(&)
+    before = self.get_human_readable_gc_data
+    yield
+    after = self.get_human_readable_gc_data
+
+    return {"before": before, "after": after}
+  end
+
+  def self.get_human_readable_gc_data
+    {
+      heap_size:      GC.stats.heap_size.humanize_bytes,
+      free_bytes:     GC.stats.free_bytes.humanize_bytes,
+      unmapped_bytes: GC.stats.unmapped_bytes.humanize_bytes,
+      bytes_since_gc: GC.stats.bytes_since_gc.humanize_bytes,
+      total_bytes:    GC.stats.total_bytes.humanize_bytes,
+    }
   end
 end
